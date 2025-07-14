@@ -1,48 +1,68 @@
 package com.example.demo.config;
 
+import com.example.demo.service.CustomUserDetailsService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+@Configuration
+@EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
-	
+
 	@Autowired
-	private UnauthorizedEntryPoint unauthorizedEntryPoint;
-	
-	@Bean
-	SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-		
-		http.cors(Customizer.withDefaults()).csrf(
-						csrf -> csrf.disable())
-				.authorizeHttpRequests(
-						authorize -> authorize
-								.requestMatchers(request -> request.getRequestURI().startsWith("/users/authenticate")
-										|| request.getRequestURI().startsWith("/users/forgotpwd")
-										|| request.getRequestURI().startsWith("/users/changepwd")
-										|| request.getRequestURI().startsWith("/users/createNewPassword")
-										|| request.getRequestURI().startsWith("/users/forgotPassword")
-										|| request.getRequestURI().startsWith("/users/otpValidate")
-										|| request.getRequestURI().startsWith("/kbsharepoint/download")
-										|| request.getRequestURI().startsWith("/localfile/download")
-										|| request.getRequestURI().startsWith("/swagger-ui")
-										|| request.getRequestURI().startsWith("/v3"))
-								.permitAll().anyRequest().authenticated())
-				.exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedEntryPoint))
-				.sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-		http.addFilterBefore(authenticationTokenFilterBean(), UsernamePasswordAuthenticationFilter.class);
-		
-		return http.build();
+	private JwtAuthenticationFilter jwtFilter;	
 
-	}
-	
-	
-	@Bean
-	JwtAuthenticationFilter authenticationTokenFilterBean() throws Exception {
-		return new JwtAuthenticationFilter();
-	}
+    @Bean
+    @Order(1)
+    public SecurityFilterChain jwtFilterChain(HttpSecurity http) throws Exception {
+        System.out.println("JWT Filter Chain Started");
 
+        http
+            .securityMatcher("/api/sample/**","/api/auth/me","/api/org/**")
+            .authorizeHttpRequests(req -> req.anyRequest().authenticated())
+            .cors(Customizer.withDefaults())
+            .addFilterBefore( jwtFilter, UsernamePasswordAuthenticationFilter.class)
+            .csrf(csrf -> csrf.disable())
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+
+        return http.build();
+    }
+
+    @Bean
+    @Order(2)
+    public SecurityFilterChain permitLoginFilterChain(HttpSecurity http) throws Exception {
+        System.out.println("Permit-All Filter Chain Started");
+        http
+            .authorizeHttpRequests(req -> req.anyRequest().permitAll())
+            .cors(Customizer.withDefaults())
+            .csrf(csrf -> csrf.disable());
+
+        return http.build();
+    }
+   
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 }
