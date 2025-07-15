@@ -2,6 +2,8 @@ package com.example.demo.config;
 
 import com.example.demo.service.CustomUserDetailsService;
 
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,6 +25,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@Slf4j
 public class SecurityConfig {
 
 	@Autowired
@@ -31,7 +34,7 @@ public class SecurityConfig {
     @Bean
     @Order(1)
     public SecurityFilterChain jwtFilterChain(HttpSecurity http) throws Exception {
-        System.out.println("JWT Filter Chain Started");
+        log.info("JWT Filter Chain Started");
 
         http
             .securityMatcher("/api/sample/**","/api/auth/me","/api/org/**")
@@ -47,7 +50,7 @@ public class SecurityConfig {
     @Bean
     @Order(2)
     public SecurityFilterChain permitLoginFilterChain(HttpSecurity http) throws Exception {
-        System.out.println("Permit-All Filter Chain Started");
+        log.info("Permit Login Filter Chain Started");
         http
             .authorizeHttpRequests(req -> req.anyRequest().permitAll())
             .cors(Customizer.withDefaults())
