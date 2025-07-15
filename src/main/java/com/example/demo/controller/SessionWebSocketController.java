@@ -3,6 +3,7 @@ package com.example.demo.controller;
 import com.example.demo.modal.Session;
 import com.example.demo.modal.WebSocketPayload;
 import com.example.demo.service.SessionService;
+import org.springframework.context.event.EventListener;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
@@ -26,16 +27,17 @@ public class SessionWebSocketController {
         switch (payload.getType()) {
             case "SESSION_CREATE":
                 Session session = sessionService.createSession(email, payload.getDeviceInfo(), payload.getIpAddress());
-                // Send confirmation to the user
+                // Optional: immediate reply (though the event listener will also handle broadcast)
                 messagingTemplate.convertAndSendToUser(email, "/queue/reply",
                         new WebSocketPayload(email, "SESSION_CREATED", null, "Session created: " + session.getSessionId(), session.getSessionId(), session.getDeviceInfo(), session.getIpAddress()));
                 break;
+
             case "SESSION_LIST":
                 List<Session> sessions = sessionService.getSessions(email);
-                // Send the list back to the user
                 messagingTemplate.convertAndSendToUser(email, "/queue/reply",
                         new WebSocketPayload(email, "SESSION_LIST", null, sessions.toString(), null, null, null));
                 break;
+
             case "SESSION_REVOKE":
                 boolean revoked = sessionService.revokeSession(email, payload.getSessionId());
                 messagingTemplate.convertAndSendToUser(email, "/queue/reply",
@@ -44,8 +46,14 @@ public class SessionWebSocketController {
         }
     }
 
-    // For broadcasting updates to all devices (used by SessionService)
+    @EventListener
+    public void handleSessionUpdate(WebSocketPayload payload) {
+        // Send to topic for all devices of the user
+        messagingTemplate.convertAndSend("/topic/sessions/" + payload.getEmail(), payload);
+    }
+
+    // Optional: still available if you want to call manually
     public void sendSessionUpdate(String email, WebSocketPayload payload) {
         messagingTemplate.convertAndSend("/topic/sessions/" + email, payload);
     }
-} 
+}

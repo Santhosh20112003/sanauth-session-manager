@@ -14,17 +14,19 @@ import com.example.demo.modal.Payload;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
+@Slf4j
 public class JwtUtil {
-	
-	private FernetUtil fernetUtil;
 
     private static final String SECRET_KEY_STRING = "e970d4a6ae7042fc886ee6744e01070de500e3242205006e080bc537a237119b";
     private final SecretKey SECRET_KEY = Keys.hmacShaKeyFor(SECRET_KEY_STRING.getBytes());
 
+    @SuppressWarnings("deprecation")
     public String generateToken(String email, String role) {
-        String token =  Jwts.builder()
+    	
+		String token =  Jwts.builder()
                 .setSubject("User Details")
                 .setHeaderParam("typ", "JWT")
                 .claim("data", new Payload(email, role))
@@ -46,7 +48,7 @@ public class JwtUtil {
     	
         Payload payload = extractPayload(token);
         try {
-			token = fernetUtil.decrypt(token);
+			token = FernetUtil.decrypt(token);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -62,13 +64,13 @@ public class JwtUtil {
         return tokenEmail.equals(userEmail) && userRoles.contains(tokenRole);
     }
     
-    public Boolean isTokenExpired(String token) {
+    @SuppressWarnings("deprecation")
+	public Boolean isTokenExpired(String token) {
 		try {
 			try {
-				token = fernetUtil.decrypt(token);
+				token = FernetUtil.decrypt(token);
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				log.error("Error decrypting token: " + e.getMessage());
 			}
 			Claims claims = Jwts.parser()
 					.verifyWith(SECRET_KEY)
@@ -77,15 +79,16 @@ public class JwtUtil {
 					.getBody();
 			return claims.getExpiration().before(new Date());
 		} catch (Exception e) {
-			System.err.println("Error checking token expiration: " + e.getMessage());
+			log.error("Error parsing token: " + e.getMessage());
 			return true; 
 		}
 	}
 
+    @SuppressWarnings("deprecation")
     public Payload extractPayload(String token) {
         try {
         	
-    			token = fernetUtil.decrypt(token);
+    		token = FernetUtil.decrypt(token);
     		
         	Payload payload = new Payload();
             Claims claims = Jwts.parser()
@@ -94,7 +97,7 @@ public class JwtUtil {
                     .parseSignedClaims(token)
                     .getBody();
             
-            LinkedHashMap<String, Object> data = claims.get("data", LinkedHashMap.class);
+			LinkedHashMap<String, Object> data = claims.get("data", LinkedHashMap.class);
             payload.setEmail((String) data.get("email"));
             payload.setRole((String) data.get("role"));
             return payload;

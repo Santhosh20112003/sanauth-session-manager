@@ -42,7 +42,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             String jwtToken = authHeader.substring(7);
-            System.out.println("JWT Token: " + jwtToken);
+//            System.out.println("JWT Token: " + jwtToken);
             
             if(jwtUtil.isTokenExpired(jwtToken)) {
             	response.sendError(HttpServletResponse.SC_NOT_ACCEPTABLE, "JWT Token Expired");
@@ -82,8 +82,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
 
-        boolean shouldSkip = !path.startsWith("/api/sample/") && 
-							 !path.startsWith("/api/auth/me") && !path.startsWith("/api/org/");
+        boolean shouldSkip = !path.startsWith("/api/");
 
         if (shouldSkip) {
             System.out.println("Skipping JwtFilter for path: " + path);
