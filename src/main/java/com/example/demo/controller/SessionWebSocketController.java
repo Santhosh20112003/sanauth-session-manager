@@ -21,30 +21,30 @@ public class SessionWebSocketController {
         this.sessionService = sessionService;
     }
 
-    @MessageMapping("/session")
-    public void handleSession(WebSocketPayload payload) {
-        String email = payload.getEmail();
-        switch (payload.getType()) {
-            case "SESSION_CREATE":
-                Session session = sessionService.createSession(email, payload.getDeviceInfo(), payload.getIpAddress());
-                // Optional: immediate reply (though the event listener will also handle broadcast)
-                messagingTemplate.convertAndSendToUser(email, "/queue/reply",
-                        new WebSocketPayload(email, "SESSION_CREATED", null, "Session created: " + session.getSessionId(), session.getSessionId(), session.getDeviceInfo(), session.getIpAddress()));
-                break;
-
-            case "SESSION_LIST":
-                List<Session> sessions = sessionService.getSessions(email);
-                messagingTemplate.convertAndSendToUser(email, "/queue/reply",
-                        new WebSocketPayload(email, "SESSION_LIST", null, sessions.toString(), null, null, null));
-                break;
-
-            case "SESSION_REVOKE":
-                boolean revoked = sessionService.revokeSession(email, payload.getSessionId());
-                messagingTemplate.convertAndSendToUser(email, "/queue/reply",
-                        new WebSocketPayload(email, revoked ? "SESSION_REVOKED" : "SESSION_REVOKE_FAILED", null, "Session revoke: " + payload.getSessionId(), payload.getSessionId(), null, null));
-                break;
-        }
-    }
+//    @MessageMapping("/session")
+//    public void handleSession(WebSocketPayload payload) {
+//        String email = payload.getEmail();
+//        switch (payload.getType()) {
+//            case "SESSION_CREATE":
+//                Session session = sessionService.createSession(email, payload.getDeviceInfo(), payload.getIpAddress());
+//                // Optional: immediate reply (though the event listener will also handle broadcast)
+//                messagingTemplate.convertAndSendToUser(email, "/queue/reply",
+//                        new WebSocketPayload(email, "SESSION_CREATED", null, "Session created: " + session.getSessionId(), session.getSessionId(), session.getDeviceInfo(), session.getIpAddress()));
+//                break;
+//
+//            case "SESSION_LIST":
+//                List<Session> sessions = sessionService.getSessions(email);
+//                messagingTemplate.convertAndSendToUser(email, "/queue/reply",
+//                        new WebSocketPayload(email, "SESSION_LIST", null, sessions.toString(), null, null, null));
+//                break;
+//
+//            case "SESSION_REVOKE":
+//                boolean revoked = sessionService.revokeSession(email, payload.getSessionId());
+//                messagingTemplate.convertAndSendToUser(email, "/queue/reply",
+//                        new WebSocketPayload(email, revoked ? "SESSION_REVOKED" : "SESSION_REVOKE_FAILED", null, "Session revoke: " + payload.getSessionId(), payload.getSessionId(), null, null));
+//                break;
+//        }
+//    }
 
     @EventListener
     public void handleSessionUpdate(WebSocketPayload payload) {

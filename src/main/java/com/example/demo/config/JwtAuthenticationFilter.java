@@ -16,7 +16,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -36,19 +35,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String authHeader = request.getHeader("Authorization");
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-        	response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "JWT Not Found in Request Header");
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "JWT Not Found in Request Header");
             return;
         }
 
         try {
             String jwtToken = authHeader.substring(7);
-//            System.out.println("JWT Token: " + jwtToken);
-            
-            if(jwtUtil.isTokenExpired(jwtToken)) {
-            	response.sendError(HttpServletResponse.SC_NOT_ACCEPTABLE, "JWT Token Expired");
-            	return;
+
+            if (jwtUtil.isTokenExpired(jwtToken)) {
+                response.sendError(HttpServletResponse.SC_NOT_ACCEPTABLE, "JWT Token Expired");
+                return;
             }
-            
+
             Payload payload = jwtUtil.extractPayload(jwtToken);
             System.out.println("Extracted Payload: " + payload);
 
@@ -57,8 +55,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 if (jwtUtil.validateToken(jwtToken, userDetails)) {
                     UsernamePasswordAuthenticationToken authenticationToken =
                             new UsernamePasswordAuthenticationToken(
-                                    userDetails.getUsername(),
-                                    userDetails.getPassword(),
+                                    userDetails,
+                                    jwtToken, // Use the token as credentials
                                     userDetails.getAuthorities()
                             );
                     authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
@@ -77,7 +75,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         filterChain.doFilter(request, response);
     }
-    
+
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();

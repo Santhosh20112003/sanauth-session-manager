@@ -1,5 +1,7 @@
 package com.example.demo.modal;
 
+import java.time.Instant;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,4 +17,6 @@ public class WebSocketPayload {
     private String sessionId;    // for revoke
     private String deviceInfo;   // for create
     private String ipAddress;    // for create
+    private String location;     // for create
+    private Instant loginTime;
 } 

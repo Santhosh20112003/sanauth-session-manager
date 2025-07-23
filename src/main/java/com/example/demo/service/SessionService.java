@@ -18,42 +18,43 @@ public class SessionService {
         this.eventPublisher = eventPublisher;
     }
 
-    public Session createSession(String subscriberEmail, String deviceInfo, String ipAddress) {
-        Session session = Session.create(subscriberEmail, deviceInfo, ipAddress);
-        sessionsBySubscriber.computeIfAbsent(subscriberEmail, k -> new ArrayList<>()).add(session);
+//    public Session createSession(String subscriberEmail, String deviceInfo, String ipAddress) {
+//        Session session = Session.create(subscriberEmail, deviceInfo, ipAddress);
+//        sessionsBySubscriber.computeIfAbsent(subscriberEmail, k -> new ArrayList<>()).add(session);
+//
+//        WebSocketPayload payload = new WebSocketPayload(
+//				subscriberEmail, "SESSION_CREATED", null,
+//				"Session created: " + session.getSessionId(),
+//				session.getSessionId(), deviceInfo, ipAddress, session.ge, session.getLoginTime()
+//		);
+//       
+//        eventPublisher.publishEvent(payload);
+//
+//        return session;
+//    }
+//
+//    public List<Session> getSessions(String subscriberEmail) {
+//        return sessionsBySubscriber.getOrDefault(subscriberEmail, Collections.emptyList());
+//    }
 
-        WebSocketPayload payload = new WebSocketPayload(
-                subscriberEmail, "SESSION_CREATED", null,
-                "New session created: " + session.getSessionId(),
-                session.getSessionId(), deviceInfo, ipAddress
-        );
-        eventPublisher.publishEvent(payload);
-
-        return session;
-    }
-
-    public List<Session> getSessions(String subscriberEmail) {
-        return sessionsBySubscriber.getOrDefault(subscriberEmail, Collections.emptyList());
-    }
-
-    public boolean revokeSession(String subscriberEmail, String sessionId) {
-        List<Session> sessions = sessionsBySubscriber.get(subscriberEmail);
-        if (sessions != null) {
-            for (Session session : sessions) {
-                if (session.getSessionId().equals(sessionId) && session.isActive()) {
-                    session.setActive(false);
-
-                    WebSocketPayload payload = new WebSocketPayload(
-                            subscriberEmail, "SESSION_REVOKED", null,
-                            "Session revoked: " + sessionId,
-                            sessionId, session.getDeviceInfo(), session.getIpAddress()
-                    );
-                    eventPublisher.publishEvent(payload);
-
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
+//    public boolean revokeSession(String subscriberEmail, String sessionId) {
+//        List<Session> sessions = sessionsBySubscriber.get(subscriberEmail);
+//        if (sessions != null) {
+//            for (Session session : sessions) {
+//                if (session.getSessionId().equals(sessionId) && session.isActive()) {
+//                    session.setActive(false);
+//
+//                    WebSocketPayload payload = new WebSocketPayload(
+//                            subscriberEmail, "SESSION_REVOKED", null,
+//                            "Session revoked: " + sessionId,
+//                            sessionId, session.getDeviceInfo(), session.getIpAddress(),session.getLocation(), session.getLoginTime()
+//                    );
+//                    eventPublisher.publishEvent(payload);
+//
+//                    return true;
+//                }
+//            }
+//        }
+//        return false;
+//    }
 }

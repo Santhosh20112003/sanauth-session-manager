@@ -12,9 +12,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import com.example.demo.modal.SessionRequestPayload;
 import com.example.demo.modal.WebSocketPayload;
 
+import lombok.extern.slf4j.Slf4j;
+
 @Service
+@Slf4j
 public class RedisService {
 
 	@Autowired
@@ -65,7 +69,7 @@ public class RedisService {
 	}
 
 	public List<Object> getAllKeys(String email) {
-		String pattern = email + ":*";
+		String pattern = email + "_*";
 		try {
 			Set<String> keys = redisTemplate.keys(pattern);
 			if (keys == null || keys.isEmpty()) {
@@ -121,6 +125,52 @@ public class RedisService {
 			e.printStackTrace();
 			return null; // Handle exceptions appropriately
 		}
+	}
+
+	public boolean saveSession(String jwtToken, String email, SessionRequestPayload sessionRequestPayload) {
+		try {
+
+			String key = email + "_" + jwtToken;
+
+			if (keyExists(key)) {
+				log.info("Session already exists for key: {}", key);
+				return true;
+			}
+
+			// save session data
+			WebSocketPayload payload = new WebSocketPayload();
+			payload.setDeviceInfo(sessionRequestPayload.getDeviceInfo());
+			payload.setIpAddress(sessionRequestPayload.getIpAddress());
+			payload.setType(sessionRequestPayload.getLocation());
+			payload.setLocation(sessionRequestPayload.getLocation());
+			payload.setLoginTime(sessionRequestPayload.getLoginTime());
+			payload.setEmail(email);
+
+			// Save the payload in Redis
+			save(key, payload);
+			log.info("Session saved successfully for key: {}", key);
+
+			return true;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	public void deleteSession(String sessionId, String email) {
+		try {
+			String key = email + "_" + sessionId;
+			if (keyExists(key)) {
+				redisTemplate.delete(key);
+				log.info("Session deleted successfully for key: {}", key);
+			} else {
+				log.warn("No session found for key: {}", key);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			log.error("Error deleting session for key: {}", sessionId, e);
+		}
+
 	}
 
 }

@@ -23,9 +23,6 @@ public class MessageController {
     @Autowired
     private RedisService redisService;
 
-    /**
-     * Publish a message to WebSocket topic & save to Redis
-     */
     @MessageMapping("/publish/{email}") // Maps to /app/publish/{email}
     @SendTo("/topic/notifications/{email}") // Broadcasts to /notification/{email}
     public WebSocketPayload publishMessage(WebSocketPayload payload, @DestinationVariable String email) {
